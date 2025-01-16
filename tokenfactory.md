@@ -255,7 +255,7 @@ When creating new denoms, they initially have no supply. The supply is determine
               return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Cannot change maxsupply")
             }
 
-            if valFound.MaxSupply != msg.MaxSupply {
+            if valFound.MaxSupply >= msg.MaxSupply {
               return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Max supply already reached")
             }
 
@@ -613,7 +613,7 @@ Congratulations on reaching the final stage! It's time to put your token factory
 In a new terminal, create a denom named uignite with the command:
 
   ```sh
-    tokenfactoryd tx tokenModule create-denom uignite "My denom" IGNITE 6 "some/url" 1000000000 true --from alice
+    tokenfactoryd tx tokenmodule create-denom uignite "My denom" IGNITE 6 "some/url" 1000000000 true --from alice
   ```
 
 - **Querying the Denom**:
@@ -621,7 +621,7 @@ In a new terminal, create a denom named uignite with the command:
 Check the list of denoms to see your new creation:
 
   ```sh
-    tokenfactoryd query tokenModule list-denom
+    tokenfactoryd query tokenmodule list-denom
   ```
 
 - **Updating the Denom**:
@@ -629,13 +629,13 @@ Check the list of denoms to see your new creation:
   - Modify the uignite denom:
 
   ```sh
-    tokenfactoryd tx tokenModule update-denom uignite "Ignite" "newurl" 2000000000 false --from alice
+    tokenfactoryd tx tokenmodule update-denom uignite "Ignite" "newurl" 2000000000 false --from alice
   ```
 
   - Query the denoms again to observe the changes:
 
   ```sh
-    tokenfactoryd query tokenModule list-denom
+    tokenfactoryd query tokenmodule list-denom
   ```
 
 - **Minting and Sending Tokens**:
@@ -643,7 +643,7 @@ Check the list of denoms to see your new creation:
   - Mint uignite tokens and send them to a recipient:
 
     ```sh
-      tokenfactoryd tx tokenModule mint-tokens uignite 1200 cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6t --from alice
+      tokenfactoryd tx tokenmodule mint-tokens uignite 1200 cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6t --from alice
     ```
 
   - Check the recipient’s balance:
@@ -653,15 +653,15 @@ Check the list of denoms to see your new creation:
 
   - Verify the updated supply in denom list:
     ```sh
-      tokenfactoryd query tokenModule list-denom
+      tokenfactoryd query tokenmodule list-denom
     ```
 
 - **Transferring Tokens**:
 
-  Transfer some uignite tokens:
+  - Transfer some uignite tokens:
 
   ```sh
-    tokenfactoryd tx tokenModule transfer-tokens uignite cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6t cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6j 100 --from alice
+    tokenfactoryd tx tokenmodule transfer-tokens uignite <ALICE_ADDRESS> <BOB_ADDRESS> 100 --from alice
   ```
 
   - Check the recipient’s balance:
@@ -669,13 +669,6 @@ Check the list of denoms to see your new creation:
       tokenfactoryd query bank balances cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6j
     ```
   
-- **Confirming Minting Restrictions**
-
-  Test minting with alice to ensure restrictions apply:
-
-  ```sh
-    tokenfactoryd tx tokenModule mint-tokens uignite 1200 cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6t --from alice
-  ```
 
 ## Congratulations!
 
@@ -689,4 +682,4 @@ You've successfully built and tested a token factory module. This tutorial has e
 
 - [Go documentation](https://go.dev/doc/install).
 - [Ignite CLI documentation](https://docs.ignite.com/nightly/welcome/install).
-
+- [Code repository](github.com/cenwadike/)
