@@ -64,7 +64,7 @@ func (k msgServer) UpdateDenom(goCtx context.Context, msg *types.MsgUpdateDenom)
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Cannot change maxsupply")
 	}
 
-	if valFound.MaxSupply != msg.MaxSupply {
+	if valFound.MaxSupply >= msg.MaxSupply {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Max supply already reached")
 	}
 
