@@ -479,12 +479,23 @@ Now we can focus on enhancing the token factory module by adding two critical me
           return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid From address (%s)", err)
         }
 
+        // Convert From address
+        fromAddr, err := sdk.AccAddressFromBech32(msg.From)
+        if err != nil {
+          return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid From address: %v", err)
+        }
+
+        // Convert To address
+        toAddr, err := sdk.AccAddressFromBech32(msg.To)
+        if err != nil {
+          return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid To address: %v", err)
+        }
         // Parse amount
         var coins sdk.Coins
         coins = coins.Add(sdk.NewCoin(msg.Denom, math.NewInt(int64(msg.Amount))))
 
         // Transfer coins
-        err = k.bankKeeper.SendCoins(ctx, sdk.AccAddress(msg.From), sdk.AccAddress(msg.To), coins)
+        err = k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, coins)
         if err != nil {
           return nil, err
         }
@@ -643,12 +654,12 @@ Check the list of denoms to see your new creation:
   - Mint uignite tokens and send them to a recipient:
 
     ```sh
-      tokenfactoryd tx tokenmodule mint-tokens uignite 1200 cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6t --from alice
+      tokenfactoryd tx tokenmodule mint-tokens uignite 1200 <ALICE_ADDRESS> --from alice
     ```
 
   - Check the recipient’s balance:
     ```sh
-      tokenfactoryd query bank balances cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6t
+      tokenfactoryd query bank balances <ALICE_ADDRESS>
     ```
 
   - Verify the updated supply in denom list:
@@ -666,9 +677,16 @@ Check the list of denoms to see your new creation:
 
   - Check the recipient’s balance:
     ```sh
-      tokenfactoryd query bank balances cosmos16x46rxvtkmgph6jnkqs80tzlzk6wpy6ftrgh6j
+      tokenfactoryd query bank balances <BOB_ADDRESS>
     ```
   
+- **Query transactions**
+
+    - You can query transactions like so:
+
+      ```sh
+      tokenfactoryd query tx <TRANSACTION_HASH>
+      ```
 
 ## Congratulations!
 
