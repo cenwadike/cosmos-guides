@@ -2,7 +2,7 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use execute::{create_post, delete_post, update_post};
+use execute::{create_post, delete_post, like_post, update_post};
 use query::{query_index, query_post, query_user_posts};
 
 use crate::error::ContractError;
@@ -45,13 +45,12 @@ pub fn execute(
         ExecuteMsg::UpdatePost { id, title, content } => {
             update_post(deps, env, info, id, Some(title), Some(content))
         }
+        ExecuteMsg::LikePost { id } => like_post(deps, id),
         ExecuteMsg::DeletePost { id } => delete_post(deps, info, id),
     }
 }
 
 pub mod execute {
-    use crate::state::USER_POSTS;
-
     use super::*;
 
     pub fn create_post(
@@ -74,6 +73,7 @@ pub mod execute {
             title,
             content,
             author: info.sender.clone(),
+            likes: 0,
             created_at: env.block.time.seconds(),
             updated_at: env.block.time.seconds(),
         };
@@ -93,7 +93,7 @@ pub mod execute {
         let mut posts = USER_POSTS
             .may_load(deps.storage, info.sender.to_string())?
             .unwrap_or_default();
-        posts.push(new_post);
+        posts.push(post_id);
         USER_POSTS.save(deps.storage, info.sender.to_string(), &posts)?;
 
         Ok(Response::new()
@@ -110,21 +110,7 @@ pub mod execute {
         content: Option<String>,
     ) -> Result<Response, ContractError> {
         let mut post = POSTS.load(deps.storage, id)?;
-        let mut posts = USER_POSTS
-            .may_load(deps.storage, info.sender.to_string())?
-            .unwrap_or_default();
 
-        let post_index = posts.iter().position(|post| post.id == id);
-        let post_id;
-
-        match post_index {
-            Some(index) => {
-                post_id = index;
-            }
-            None => {
-                return Err(ContractError::PostNotFound {});
-            }
-        }
         // Only author can update
         if post.author != info.sender {
             return Err(ContractError::Unauthorized {});
@@ -132,23 +118,29 @@ pub mod execute {
 
         if let Some(new_title) = title {
             post.title = new_title.clone();
-            posts[post_id].title = new_title;
         }
 
         if let Some(new_content) = content {
             post.content = new_content.clone();
-            posts[post_id].content = new_content;
         }
 
         post.updated_at = env.block.time.seconds();
-        posts[post_id].updated_at = env.block.time.seconds();
 
         POSTS.save(deps.storage, id, &post)?;
 
-        USER_POSTS.save(deps.storage, info.sender.to_string(), &posts)?;
-
         Ok(Response::new()
             .add_attribute("method", "update_post")
+            .add_attribute("post_id", id.to_string()))
+    }
+
+    pub fn like_post(deps: DepsMut, id: u64) -> Result<Response, ContractError> {
+        let mut post = POSTS.load(deps.storage, id)?;
+        post.likes += 1;
+
+        POSTS.save(deps.storage, id, &post)?;
+
+        Ok(Response::new()
+            .add_attribute("method", "like_post")
             .add_attribute("post_id", id.to_string()))
     }
 
@@ -170,7 +162,7 @@ pub mod execute {
             .may_load(deps.storage, info.sender.to_string())?
             .unwrap_or_default();
 
-        let post_index = posts.iter().position(|post| post.id == id);
+        let post_index = posts.iter().position(|post_id| post_id == &id);
 
         match post_index {
             Some(index) => {
@@ -196,7 +188,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 pub mod query {
-    use crate::msg::{GetIndexResponse, GetPostResponse, GetUserPostResponse};
+    use crate::msg::{GetIndexResponse, GetPostResponse, GetUserPostsResponse};
 
     use super::*;
 
@@ -212,15 +204,15 @@ pub mod query {
         Ok(GetPostResponse { post })
     }
 
-    pub fn query_user_posts(deps: Deps, user: String) -> StdResult<GetUserPostResponse> {
+    pub fn query_user_posts(deps: Deps, user: String) -> StdResult<GetUserPostsResponse> {
         let state = USER_POSTS.load(deps.storage, user)?;
-        Ok(GetUserPostResponse { posts: state })
+        Ok(GetUserPostsResponse { posts: state })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::msg::{GetIndexResponse, GetPostResponse, GetUserPostResponse};
+    use crate::msg::{GetIndexResponse, GetPostResponse};
 
     use super::*;
     use cosmwasm_std::testing::{message_info, mock_dependencies, mock_env};
@@ -292,28 +284,6 @@ mod tests {
 
         // Check author
         assert_eq!(author, value.post.author);
-
-        let res = query(
-            deps.as_ref(),
-            mock_env(),
-            QueryMsg::GetUserPosts {
-                user: "anyone".to_string(),
-            },
-        )
-        .unwrap();
-        let value: GetUserPostResponse = from_json(&res).unwrap();
-
-        // Should be assigned current index
-        assert_eq!(new_index, value.posts[0].id);
-
-        // Check title
-        assert_eq!(title, value.posts[0].title);
-
-        // Check content
-        assert_eq!(content, value.posts[0].content);
-
-        // Check author
-        assert_eq!(author, value.posts[0].author);
     }
 
     #[test]

@@ -1,5 +1,5 @@
+use crate::state::{Post, PostId};
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use crate::state::Post;
 
 #[cw_serde]
 pub struct InstantiateMsg {}
@@ -14,6 +14,9 @@ pub enum ExecuteMsg {
         id: u64,
         title: String,
         content: String,
+    },
+    LikePost {
+        id: u64,
     },
     DeletePost {
         id: u64,
@@ -32,7 +35,7 @@ pub enum QueryMsg {
     GetPost { id: u64 },
 
     // GetPost returns the users post as a json-encoded Posts
-    #[returns(GetUserPostResponse)]
+    #[returns(GetUserPostsResponse)]
     GetUserPosts { user: String },
 }
 
@@ -50,6 +53,6 @@ pub struct GetPostResponse {
 
 // We define a custom struct for each query response
 #[cw_serde]
-pub struct GetUserPostResponse {
-    pub posts: Vec<Post>,
+pub struct GetUserPostsResponse {
+    pub posts: Vec<PostId>,
 }
