@@ -700,4 +700,4 @@ You've successfully built and tested a token factory module. This tutorial has e
 
 - [Go documentation](https://go.dev/doc/install).
 - [Ignite CLI documentation](https://docs.ignite.com/nightly/welcome/install).
-- [Code repository](github.com/cenwadike/)
+- [Code repository](github.com/cenwadike/cosmos-guides)
