@@ -1,4 +1,4 @@
-use crate::state::{Post, PostId};
+use crate::state::{Post, PostId, Profile};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
 #[cw_serde]
@@ -52,6 +52,10 @@ pub enum QueryMsg {
     #[returns(GetIndexResponse)]
     CurrentIndex {},
 
+    // GetPost returns the profile as a json-encoded Post
+    #[returns(GetProfileResponse)]
+    GetProfile { user_name: String },
+
     // GetPost returns the post as a json-encoded Post
     #[returns(GetPostResponse)]
     GetPost { id: u64 },
@@ -67,6 +71,11 @@ pub struct GetIndexResponse {
     pub current_index: u64,
 }
 
+// We define a custom struct for each query response
+#[cw_serde]
+pub struct GetProfileResponse {
+    pub profile: Profile,
+}
 // We define a custom struct for each query response
 #[cw_serde]
 pub struct GetPostResponse {

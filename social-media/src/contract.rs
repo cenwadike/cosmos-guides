@@ -6,7 +6,7 @@ use execute::{
     comment_on_post, create_post, create_profile, delete_post, follow, like_post, unfollow,
     update_post, update_profile,
 };
-use query::{query_index, query_post, query_user_posts};
+use query::{query_index, query_post, query_profile, query_user_posts};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -389,13 +389,14 @@ pub mod execute {
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::CurrentIndex {} => to_json_binary(&query_index(deps)?),
+        QueryMsg::GetProfile { user_name } => to_json_binary(&query_profile(deps, user_name)?),
         QueryMsg::GetPost { id } => to_json_binary(&query_post(deps, id)?),
         QueryMsg::GetUserPosts { user } => to_json_binary(&query_user_posts(deps, user)?),
     }
 }
 
 pub mod query {
-    use crate::msg::{GetIndexResponse, GetPostResponse, GetUserPostsResponse};
+    use crate::msg::{GetIndexResponse, GetPostResponse, GetProfileResponse, GetUserPostsResponse};
 
     use super::*;
 
@@ -403,6 +404,12 @@ pub mod query {
         let current_index = POST_INDEX.load(deps.storage)?.current_index;
 
         Ok(GetIndexResponse { current_index })
+    }
+
+    pub fn query_profile(deps: Deps, user_name: String) -> StdResult<GetProfileResponse> {
+        let profile = PROFILES.load(deps.storage, user_name.trim().to_lowercase())?;
+
+        Ok(GetProfileResponse { profile })
     }
 
     pub fn query_post(deps: Deps, id: u64) -> StdResult<GetPostResponse> {
