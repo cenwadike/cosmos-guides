@@ -9,6 +9,12 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("AboutTooLong")]
+    AboutTooLong {},
+
+    #[error("ProfileNotFound")]
+    ProfileNotFound {},
+
     #[error("PostNotFound")]
     PostNotFound {},
     // Add any other custom errors you like here.

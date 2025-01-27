@@ -6,6 +6,24 @@ pub struct InstantiateMsg {}
 
 #[cw_serde]
 pub enum ExecuteMsg {
+    CreateProfile {
+        user_name: String,
+        about: String,
+        image_url: String,
+    },
+    UpdateProfile {
+        user_name: String,
+        about: String,
+        image_url: String,
+    },
+    Follow {
+        my_user_name: String,
+        following_user_name: String,
+    },
+    Unfollow {
+        my_user_name: String,
+        following_user_name: String,
+    },
     CreatePost {
         title: String,
         content: String,

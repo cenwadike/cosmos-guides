@@ -2,12 +2,15 @@
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
-use execute::{comment_on_post, create_post, delete_post, like_post, update_post};
+use execute::{
+    comment_on_post, create_post, create_profile, delete_post, follow, like_post, unfollow,
+    update_post, update_profile,
+};
 use query::{query_index, query_post, query_user_posts};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{Index, Post, INDEX, POSTS, USER_POSTS};
+use crate::state::{Index, Post, Profile, POSTS, POST_INDEX, PROFILES, PROFILE_INDEX, USER_POSTS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:socialmedia";
@@ -25,7 +28,7 @@ pub fn instantiate(
 
     // Initialize index
     let index = Index { current_index: 0 };
-    INDEX.save(deps.storage, &index)?;
+    POST_INDEX.save(deps.storage, &index)?;
 
     // Emit event for logging
     Ok(Response::new()
@@ -41,6 +44,24 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::CreateProfile {
+            user_name,
+            about,
+            image_url,
+        } => create_profile(deps, env, info, user_name, about, image_url),
+        ExecuteMsg::UpdateProfile {
+            user_name,
+            about,
+            image_url,
+        } => update_profile(deps, env, info, user_name, Some(about), Some(image_url)),
+        ExecuteMsg::Follow {
+            my_user_name,
+            following_user_name,
+        } => follow(deps, my_user_name, following_user_name),
+        ExecuteMsg::Unfollow {
+            my_user_name,
+            following_user_name,
+        } => unfollow(deps, my_user_name, following_user_name),
         ExecuteMsg::CreatePost { title, content } => create_post(deps, env, info, title, content),
         ExecuteMsg::UpdatePost { id, title, content } => {
             update_post(deps, env, info, id, Some(title), Some(content))
@@ -52,7 +73,172 @@ pub fn execute(
 }
 
 pub mod execute {
+
     use super::*;
+
+    pub fn create_profile(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        user_name: String,
+        about: String,
+        image_url: String,
+    ) -> Result<Response, ContractError> {
+        // Get post id.
+        let profile_id = PROFILE_INDEX.load(deps.storage)?.current_index + 1;
+
+        // Ensure max length is fixed.
+        if about.trim().len() > 240 {
+            return Err(ContractError::AboutTooLong {});
+        }
+
+        // Construct new profile
+        let new_profile = Profile {
+            id: profile_id,
+            addr: info.sender,
+            user_name: user_name.trim().to_lowercase(),
+            about: about.trim().to_string(),
+            image: image_url,
+            followers: vec![],
+            following: vec![],
+            created_at: env.block.time.seconds(),
+            updated_at: env.block.time.seconds(),
+        };
+
+        // Update index
+        PROFILE_INDEX.save(
+            deps.storage,
+            &Index {
+                current_index: profile_id,
+            },
+        )?;
+
+        // Add to profile storage
+        PROFILES.save(deps.storage, user_name.trim().to_lowercase(), &new_profile)?;
+
+        Ok(Response::new()
+            .add_attribute("action", "create_profile")
+            .add_attribute("user_name", user_name))
+    }
+
+    pub fn update_profile(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        user_name: String,
+        about: Option<String>,
+        image_url: Option<String>,
+    ) -> Result<Response, ContractError> {
+        let mut profile = PROFILES.load(deps.storage, user_name.trim().to_lowercase())?;
+
+        // Only author can update
+        if profile.addr != info.sender {
+            return Err(ContractError::Unauthorized {});
+        }
+
+        if let Some(about) = about {
+            if about.trim().len() > 240 {
+                return Err(ContractError::AboutTooLong {});
+            }
+            profile.about = about.trim().to_string();
+        }
+
+        if let Some(image_url) = image_url {
+            profile.image = image_url;
+        }
+
+        profile.updated_at = env.block.time.seconds();
+
+        PROFILES.save(deps.storage, user_name.trim().to_lowercase(), &profile)?;
+
+        Ok(Response::new()
+            .add_attribute("action", "update_profile")
+            .add_attribute("user_name", user_name))
+    }
+
+    pub fn follow(
+        deps: DepsMut,
+        my_user_name: String,
+        following_user_name: String,
+    ) -> Result<Response, ContractError> {
+        let mut my_profile = PROFILES.load(deps.storage, my_user_name.trim().to_lowercase())?;
+        my_profile.following.push(following_user_name.clone());
+
+        let mut following_profile =
+            PROFILES.load(deps.storage, following_user_name.trim().to_lowercase())?;
+        following_profile.followers.push(my_user_name.clone());
+
+        PROFILES.save(
+            deps.storage,
+            my_user_name.trim().to_lowercase(),
+            &my_profile,
+        )?;
+        PROFILES.save(
+            deps.storage,
+            following_user_name.trim().to_lowercase(),
+            &following_profile,
+        )?;
+
+        Ok(Response::new()
+            .add_attribute("action", "follow")
+            .add_attribute("user_name", my_user_name)
+            .add_attribute("follow", following_user_name))
+    }
+
+    pub fn unfollow(
+        deps: DepsMut,
+        my_user_name: String,
+        following_user_name: String,
+    ) -> Result<Response, ContractError> {
+        // remove from user profile
+        let mut my_profile = PROFILES.load(deps.storage, my_user_name.trim().to_lowercase())?;
+        let mut following = my_profile.following;
+
+        let following_index = following
+            .iter()
+            .position(|user_name| user_name == &following_user_name);
+
+        match following_index {
+            Some(following_index) => {
+                following.remove(following_index);
+                my_profile.following = following;
+            }
+            None => return Err(ContractError::ProfileNotFound {}),
+        }
+
+        // remove from follower profile
+        let mut following_profile =
+            PROFILES.load(deps.storage, following_user_name.trim().to_lowercase())?;
+        let mut followers = following_profile.followers;
+
+        let follower_index = followers
+            .iter()
+            .position(|user_name| user_name == &my_user_name);
+
+        match follower_index {
+            Some(follower_index) => {
+                followers.remove(follower_index);
+                following_profile.followers = followers;
+            }
+            None => return Err(ContractError::ProfileNotFound {}),
+        }
+
+        PROFILES.save(
+            deps.storage,
+            my_user_name.trim().to_lowercase(),
+            &my_profile,
+        )?;
+        PROFILES.save(
+            deps.storage,
+            following_user_name.trim().to_lowercase(),
+            &following_profile,
+        )?;
+
+        Ok(Response::new()
+            .add_attribute("action", "follow")
+            .add_attribute("user_name", my_user_name)
+            .add_attribute("unfollow", following_user_name))
+    }
 
     pub fn create_post(
         deps: DepsMut,
@@ -62,7 +248,7 @@ pub mod execute {
         content: String,
     ) -> Result<Response, ContractError> {
         // Get post id.
-        let post_id = INDEX.load(deps.storage)?.current_index + 1;
+        let post_id = POST_INDEX.load(deps.storage)?.current_index + 1;
 
         // Remove trailing space in title and content.
         let title = title.trim().to_string();
@@ -82,7 +268,7 @@ pub mod execute {
         };
 
         // Update index
-        INDEX.save(
+        POST_INDEX.save(
             deps.storage,
             &Index {
                 current_index: post_id,
@@ -214,7 +400,7 @@ pub mod query {
     use super::*;
 
     pub fn query_index(deps: Deps) -> StdResult<GetIndexResponse> {
-        let current_index = INDEX.load(deps.storage)?.current_index;
+        let current_index = POST_INDEX.load(deps.storage)?.current_index;
 
         Ok(GetIndexResponse { current_index })
     }
