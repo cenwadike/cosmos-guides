@@ -677,10 +677,10 @@ PS: **Comment out all the red squiggly lines**
 4. Optimize wasm artifact
 
     ```sh
-        docker run --rm -v "$(pwd)":/code \              
-        --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-        --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-        cosmwasm/optimizer:0.16.0
+        docker run --rm -v "$(pwd)":/code \
+            --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
+            --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+            cosmwasm/optimizer:0.16.0
     ```
 
 5. Run the deployment:

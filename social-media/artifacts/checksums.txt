@@ -1,1 +1,1 @@
-52c127093919d6982100cfe266a714078f9dfb3dd0d0fb564145cf264abb9f61  social_media.wasm
+c00e7a30725d1d54020eae2fd6accd68c7e0bd31b12356caef5e9f99e149ba50  social_media.wasm

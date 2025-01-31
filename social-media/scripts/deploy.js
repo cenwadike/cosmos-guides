@@ -1,9 +1,11 @@
-const { SigningCosmWasmClient } = require("@cosmjs/cosmwasm-stargate");
-const { DirectSecp256k1HdWallet } = require("@cosmjs/proto-signing");
-const { GasPrice } = require("@cosmjs/stargate");
-const fs = require("fs");
+import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { GasPrice } from "@cosmjs/stargate";
+import { readFileSync } from "fs";
 
-require('dotenv').config();
+import dotenv from "dotenv"
+
+dotenv.config()
 
 const rpcEndpoint = "https://rpc-palvus.pion-1.ntrn.tech";
 const mnemonic = process.env.MNEMONIC;
