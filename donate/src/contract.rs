@@ -29,10 +29,10 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Swap {
+        ExecuteMsg::Donate {
             recipient,
             amount_in,
-        } => execute::execute_swap(deps, env, info, recipient, amount_in),
+        } => execute::execute_donate(deps, env, info, recipient, amount_in),
     }
 }
 
@@ -41,7 +41,7 @@ pub mod execute {
 
     use super::*;
 
-    pub fn execute_swap(
+    pub fn execute_donate(
         _deps: DepsMut,
         env: Env,
         _info: MessageInfo,

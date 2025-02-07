@@ -509,6 +509,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "donate"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "schemars",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "dyn-clone"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -590,21 +605,6 @@ name = "fiat-crypto"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
-
-[[package]]
-name = "fix-swap"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-multi-test",
- "cw-storage-plus",
- "cw2",
- "cw20",
- "schemars",
- "serde",
- "thiserror 1.0.69",
-]
 
 [[package]]
 name = "generic-array"

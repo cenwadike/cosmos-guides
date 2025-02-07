@@ -6,7 +6,7 @@ pub struct InstantiateMsg {}
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    Swap { recipient: Addr, amount_in: Uint128 },
+    Donate { recipient: Addr, amount_in: Uint128 },
 }
 
 #[cw_serde]

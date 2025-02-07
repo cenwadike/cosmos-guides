@@ -9,7 +9,7 @@ dotenv.config()
 
 const rpcEndpoint = "https://rpc-palvus.pion-1.ntrn.tech";
 const mnemonic = process.env.MNEMONIC;
-const wasmFilePath = "./artifacts/fix_swap.wasm";
+const wasmFilePath = "./artifacts/donate.wasm";
 
 async function main() {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
