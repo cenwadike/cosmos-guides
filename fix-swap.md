@@ -34,6 +34,12 @@ will equip you with the knowledge and tools to transfer fungible tokens between 
         cd swap
     ```
 
+2. **Install dependencies**: Use the cw-template to scaffold a new project:
+
+```sh
+    cargo add cw20
+```
+
 ## Step 3: Define Data Structures
 
 1. Data structure is keep track of exchange rate 

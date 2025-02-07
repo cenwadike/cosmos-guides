@@ -1,22 +1,12 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint128};
 
 #[cw_serde]
-pub struct InstantiateMsg {
-    pub base_token: Addr,
-    pub quote_token: Addr,
-    pub rate: u128,
-}
+pub struct InstantiateMsg {}
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    Swap {
-        base_token: Addr,
-        quote_token: Addr,
-        token_denom: String,
-        recipient: Addr,
-        amount_in: u128,
-    },
+    Swap { recipient: Addr, amount_in: Uint128 },
 }
 
 #[cw_serde]
