@@ -16,7 +16,7 @@ declare global {
   interface Window extends KeplrWindow {}
 }
 
-const SwapInterface = () => {
+const DonateInterface = () => {
   const [account, setAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [recipient, setRecipient] = useState('');
@@ -211,7 +211,7 @@ const SwapInterface = () => {
             disabled={!account || loading || !amount}
             className="w-full"
           >
-            {loading ? "Processing..." : "Swap"}
+            {loading ? "Processing..." : "Donate"}
           </Button>
         </div>
       </CardContent>
@@ -219,4 +219,4 @@ const SwapInterface = () => {
   );
 };
 
-export default SwapInterface;
+export default DonateInterface;
