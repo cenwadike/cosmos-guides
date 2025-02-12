@@ -74,6 +74,6 @@ pub mod execute {
 
         Ok(Response::new()
             .add_messages(msgs) // notice message
-            .add_attribute("action", "swap"))
+            .add_attribute("action", "donate"))
     }
 }

@@ -25,7 +25,7 @@ const DonateInterface = () => {
   const [success, setSuccess] = useState('');
 
   // Neutron testnet configuration
-  const CONTRACT_ADDRESS = "neutron1ukzxaw7s83ej38sk2kdf2f5sam60uexeganwlxdksj7x4us4js6sa4ekw6";
+  const CONTRACT_ADDRESS = "neutron1hjle7jv48ejfsq54lt8x6g6d7n4s7vxaln5rkt5tl09ms3x0tsssyf4vft";
   const CHAIN_ID = "pion-1";
   const RPC_ENDPOINT = "https://rpc-palvus.pion-1.ntrn.tech";
 
@@ -78,84 +78,77 @@ const DonateInterface = () => {
 
       // Suggest chain to Keplr
       await window.keplr.experimentalSuggestChain(chainConfig);
-      
+
       // Enable access to Keplr
       await window.keplr.enable(CHAIN_ID);
-      
+
       const key = await window.keplr.getKey(CHAIN_ID);
       setAccount(key.bech32Address);
     } catch (error) {
       console.error(error);
-      // setError(error.message);
+      // setError(error.message); // Commented out this line
     }
   };
 
   // Execute donation transaction
-  const executeDonation = async () => {
-    try {
-        setLoading(true);
-        setError('');
-        setSuccess('');
+const executeDonation = async () => {
+  try {
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
-        if (!window.keplr || !account) {
-            throw new Error("Please connect your wallet first");
-        }
-
-        const formatted_amount = parseInt(amount) * 1000000;
-        if (formatted_amount <= 0) {
-          throw new Error("Amount must be greater than 0");
-        }
-        const string_formatted_amount = formatted_amount.toString();
-
-        // Prepare the donation message
-        const msg = {
-            donate: {
-                recipient: recipient || account,
-                amount_in: string_formatted_amount
-            }
-        };
-
-        // Create a CosmWasm client
-        try {
-            // Get offline signer from Keplr
-            const offlineSigner = window.keplr.getOfflineSigner(CHAIN_ID);
-
-            // Create a CosmWasm client
-            const client = await SigningCosmWasmClient.connectWithSigner(
-                RPC_ENDPOINT,
-                offlineSigner,
-                { gasPrice: GasPrice.fromString("0.025untrn") }
-            );
-
-            // Execute the transaction
-            const result = await client.execute(
-                account,
-                CONTRACT_ADDRESS,
-                msg,
-                "auto",
-                undefined,
-                [
-                    {
-                        denom: "untrn",
-                        amount: string_formatted_amount
-                    }
-                ]
-            );
-
-            console.log("Donation successful:", result);
-            setSuccess("Donation was successful!");
-            setLoading(false);
-        } catch (broadcastError) {
-            console.error(broadcastError);
-            setError("Failed to broadcast transaction. Please try again.");
-            setLoading(false);
-        }      
-    } catch (error) {
-      console.error(error);
-      // setError(error.message);
-      setLoading(false);
+    if (!window.keplr || !account) {
+      throw new Error("Please connect your wallet first");
     }
-  };
+
+    const formatted_amount = parseInt(amount) * 1000000;
+    if (formatted_amount <= 0) {
+      throw new Error("Amount must be greater than 0");
+    }
+    const string_formatted_amount = formatted_amount.toString();
+
+    // Prepare the donation message
+    const msg = {
+      donate: {
+        recipient: recipient || account,
+        amount_in: string_formatted_amount
+      }
+    };
+
+    // Get offline signer from Keplr
+    const offlineSigner = window.keplr.getOfflineSigner(CHAIN_ID);
+
+    // Create a CosmWasm client
+    const client = await SigningCosmWasmClient.connectWithSigner(
+      RPC_ENDPOINT,
+      offlineSigner,
+      { gasPrice: GasPrice.fromString("0.025untrn") }
+    );
+
+    // Execute the transaction
+    const result = await client.execute(
+      account,
+      CONTRACT_ADDRESS,
+      msg,
+      "auto",
+      undefined,
+      [
+        {
+          denom: "untrn",
+          amount: string_formatted_amount
+        }
+      ]
+    );
+
+    console.log("Donation successful:", result);
+    setSuccess("Donation was successful!");
+  } catch (error) {
+    console.error(error);
+    // setError(error.message); // Commented out this line
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Card className="w-full max-w-lg mx-auto mt-8 sm:w-full bg-gray-100">
